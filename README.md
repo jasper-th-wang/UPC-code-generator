@@ -1,1 +1,1 @@
-# private-barcode-generator
+# UPC-code-generator
