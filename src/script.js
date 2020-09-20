@@ -22,7 +22,7 @@ function bindPrefix(arr) {
 
 function makeSizeArr(num) {
   let arr = [];
-  for (i = 0; i < 10; i++) {
+  for (let i = 0; i < 10; i++) {
     arr.push(`${ num }${ i }`);
   }
   return arr;
@@ -34,7 +34,7 @@ function validate(num) {
   // console.log(arr); test
 
   let arrMultiplied = [];
-  for (i = 1; i < 12; i++) {
+  for (let i = 1; i < 12; i++) {
     if (i % 2 !== 0) {
       arrMultiplied.push(arr[i - 1] * 3);
     } else {
@@ -59,14 +59,13 @@ function validate(num) {
 
 // console.log(validate(88230397543));
 
-
 function makeResultsArr(arr) {
   let checkedArr = arr.map(el => validate(el));
   return checkedArr;
 }
 
 function display(arr) {
-  results = arr.join('\n');
+  const results = arr.join('\n');
   textArea.value = results;
 
 }

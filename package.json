@@ -1,0 +1,23 @@
+{
+  "name": "upc-code-generator",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "parcel src/index.html --host 0.0.0.0 --port 8080",
+    "prod": "parcel build src/index.html"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jasper8777/UPC-code-generator.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jasper8777/UPC-code-generator/issues"
+  },
+  "homepage": "https://github.com/jasper8777/UPC-code-generator#readme",
+  "dependencies": {
+    "parcel": "^1.12.4"
+  }
+}
