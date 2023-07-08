@@ -1,143 +1,148 @@
 'use strict';
 
-
-
-
-// gather all selected value and make an array
-
-// View
-const userSelectedElements = document.querySelectorAll('select');
-const generate = document.querySelector('.generate');
-const textArea = document.getElementById('results');
-
-function combineArrayWithLineBreaks(arr) {
-  if (!(arr instanceof Array)) {
-    throw new Error('Invalid argument: Expected an Array, instead received' + arr)
+class View {
+  constructor() {
+    this.userSelectedElements = document.querySelectorAll('select');
+    this.generateButton = document.querySelector('.generate');
+    this.textArea = document.getElementById('results');
   }
 
-  return arr.join('\n');
-}
-
-function displayStringOnElement(element, str) {
-  if (typeof(str) != "string") {
-    throw new Error('Invalid argument: Expected a String, instead received' + str);
+  displayStringOnElement = (str) => {
+    if (typeof(str) != "string") {
+      throw new Error('Invalid argument: Expected a String, instead received' + str);
+    }
+    this.textArea.value = str;
   }
 
-  if (!(element instanceof HTMLElement)) {
-    throw new Error('Invalid argument: Expected a HTML element, instead received' + element);
+}
+
+class Model {
+  constructor() {
+    this.PREFIX = 882303;
   }
 
-  textArea.value = str;
-}
+  // Data Manipulation Methods
 
-
-// Model
-
-const PREFIX = 882303;
-
-function extractElementsToArray(nodeList) {
-  if (!(nodeList instanceof NodeList)) {
-    throw new Error('Invalid argument: Expected a NodeList, intead received' + nodeList)
+  extractElementsToArray = (nodeList) => {
+    if (!(nodeList instanceof NodeList)) {
+      throw new Error('Invalid argument: Expected a NodeList, intead received' + nodeList)
+    }
+  
+    let arr = [];
+    nodeList.forEach(select => arr.push(select.value));
+    return arr;
   }
 
-  let arr = [];
-  nodeList.forEach(select => arr.push(select.value));
-  return arr;
-}
-
-function containsNull(arr) {
-  return arr.includes('null');
-}
-
-function makeSizeArr(num) {
-  let arr = [];
-  for (let i = 0; i < 10; i++) {
-    arr.push(`${ num }${ i }`);
+  containsNull = (arr) => {
+    return arr.includes('null');
   }
-  return arr;
-}
 
-function combineArrayToString(arr) {
-  if (!(arr instanceof Array)) {
-    throw new Error('Invalid argument: Expected an Array, instead received' + arr)
+  makeSizeArr = (num) => {
+    let arr = [];
+    for (let i = 0; i < 10; i++) {
+      arr.push(`${ num }${ i }`);
+    }
+    return arr;
   }
-  return arr.join('')
-}
-
-function bindPrefix(prefix, str) {
-  if (typeof(str) != "string") {
-    throw new Error('Invalid argument: Expected a String, instead received' + str)
+  
+  combineArrayToString = (arr) => {
+    if (!(arr instanceof Array)) {
+      throw new Error('Invalid argument: Expected an Array, instead received' + arr)
+    }
+    return arr.join('')
   }
-  return `${ prefix }${ str }`;
-}
 
-function validate(num) {
-  let arr = num.toString().split('')
-    .map(Number);
-  // console.log(arr); test
+  bindPrefix = (prefix, str) => {
+    if (typeof(str) != "string") {
+      throw new Error('Invalid argument: Expected a String, instead received' + str)
+    }
+    return `${ prefix }${ str }`;
+  }
 
-  let arrMultiplied = [];
-  for (let i = 1; i < 12; i++) {
-    if (i % 2 !== 0) {
-      arrMultiplied.push(arr[i - 1] * 3);
+
+  // UPC Check Digit Methods
+  addUPCCheckDigit = (num) => {
+    let arr = num.toString().split('')
+      .map(Number);
+  
+    let arrMultiplied = [];
+    for (let i = 1; i < 12; i++) {
+      if (i % 2 !== 0) {
+        arrMultiplied.push(arr[i - 1] * 3);
+      } else {
+        arrMultiplied.push(arr[i - 1]);
+      }
+    }
+    // console.log(arrMultiplied); test
+    let sumMultiplied = arrMultiplied.reduce((acc, cur) => {
+      return acc + cur;
+    }, 0);
+    // console.log('sum: ' + sumMultiplied); test
+  
+    let nearestTen = Math.ceil(sumMultiplied / 10) * 10;
+  
+    if (sumMultiplied % 10 === 0) {
+      return `${ num }0`;
     } else {
-      arrMultiplied.push(arr[i - 1]);
+      return `${ num }${ nearestTen - sumMultiplied }`;
+    }
+  
+  }
+
+  // Results Formatting Methods
+
+  makeResultsArr = (arr) => {
+    let checkedArr = arr.map(el => this.addUPCCheckDigit(el));
+    return checkedArr;
+  }
+
+  combineArrayWithLineBreaks = (arr) => {
+    if (!(arr instanceof Array)) {
+      throw new Error('Invalid argument: Expected an Array, instead received' + arr)
+    }
+  
+    return arr.join('\n');
+  }
+
+}
+
+class Controller {
+  constructor(model, view) {
+    this.model = model;
+    this.view = view;
+  }
+  handleGenerateCodes = () => {
+    // gather all selected value and make an array
+
+    let userSelectedElementsArray = this.model.extractElementsToArray(this.view.userSelectedElements);
+
+    // check if there's null value, if there is, alert, and returns boolean
+
+    if (this.model.containsNull(userSelectedElementsArray)) {
+      window.alert('Please make sure you\'ve selected all options');
+    } else {
+
+      // combine the number with the prefixes
+      let prefixedString = this.model.bindPrefix(this.model.PREFIX, this.model.combineArrayToString(userSelectedElementsArray));
+
+      // append all sizes and make a array of the UPC codes with sizing
+
+      let arrWithSize = this.model.makeSizeArr(prefixedString);
+
+      // map() => GS1 calc
+
+      let results = this.model.makeResultsArr(arrWithSize);
+
+
+      // display on UI
+      this.view.displayStringOnElement(this.model.combineArrayWithLineBreaks(results));
     }
   }
-  // console.log(arrMultiplied); test
-  let sumMultiplied = arrMultiplied.reduce((acc, cur) => {
-    return acc + cur;
-  }, 0);
-  // console.log('sum: ' + sumMultiplied); test
-
-  let nearestTen = Math.ceil(sumMultiplied / 10) * 10;
-
-  if (sumMultiplied % 10 === 0) {
-    return `${ num }0`;
-  } else {
-    return `${ num }${ nearestTen - sumMultiplied }`;
-  }
-
-}
-
-// console.log(validate(88230397543));
-
-function makeResultsArr(arr) {
-  let checkedArr = arr.map(el => validate(el));
-  return checkedArr;
 }
 
 // Entry
-
+const model = new Model();
+const view = new View();
+const controller = new Controller(model, view);
 // when click generate, it gathers all value from select and make an array
-generate.addEventListener('click', () => {
-
-  // gather all selected value and make an array
-
-  let userSelectedElementsArray = extractElementsToArray(userSelectedElements);
-
-  // check if there's null value, if there is, alert, and returns boolean
-
-  if (containsNull(userSelectedElementsArray)) {
-    window.alert('Please make sure you\'ve selected all options');
-  } else {
-
-    // combine the number with the prefixes
-    let prefixedString = bindPrefix(PREFIX, combineArrayToString(userSelectedElementsArray));
-    console.log(prefixedString);
-    // append all sizes and make a array of the UPC codes with sizing
-
-    let arrWithSize = makeSizeArr(prefixedString);
-    console.log(arrWithSize);
-    // map() => GS1 calc
-
-    let results = makeResultsArr(arrWithSize);
-    console.log(results);
-
-    // display on UI
-
-
-
-    displayStringOnElement(textArea, combineArrayWithLineBreaks(results));
-  }
-});
+view.generateButton.addEventListener('click',controller.handleGenerateCodes);
